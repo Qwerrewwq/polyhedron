@@ -6,7 +6,8 @@ from common.tk_drawer import TkDrawer
 
 
 class Segment:
-    """ Одномерный отрезок """
+    """Одномерный отрезок"""
+
     # Параметры конструктора: начало и конец отрезка (числа)
 
     def __init__(self, beg, fin):
@@ -27,13 +28,18 @@ class Segment:
     # Разность отрезков
     # Разность двух отрезков всегда является списком из двух отрезков!
     def subtraction(self, other):
-        return [Segment(
-            self.beg, self.fin if self.fin < other.beg else other.beg),
-            Segment(self.beg if self.beg > other.fin else other.fin, self.fin)]
+        return [
+            Segment(self.beg, self.fin if self.fin < other.beg else other.beg),
+            Segment(self.beg if self.beg > other.fin else other.fin, self.fin),
+        ]
+
+    def is_good_segment(self):
+        return self.beg.is_good() and self.fin.is_good()
 
 
 class Edge:
-    """ Ребро полиэдра """
+    """Ребро полиэдра"""
+
     # Начало и конец стандартного одномерного отрезка
     SBEG, SFIN = 0.0, 1.0
 
@@ -56,14 +62,13 @@ class Edge:
                 return
 
         shade.intersect(
-            self.intersect_edge_with_normal(
-                facet.vertexes[0], facet.h_normal()))
+            self.intersect_edge_with_normal(facet.vertexes[0], facet.h_normal())
+        )
         if shade.is_degenerate():
             return
         # Преобразование списка «просветов», если тень невырождена
         gaps = [s.subtraction(shade) for s in self.gaps]
-        self.gaps = [
-            s for s in reduce(add, gaps, []) if not s.is_degenerate()]
+        self.gaps = [s for s in reduce(add, gaps, []) if not s.is_degenerate()]
 
     # Преобразование одномерных координат в трёхмерные
     def r3(self, t):
@@ -77,12 +82,16 @@ class Edge:
             return Segment(Edge.SFIN, Edge.SBEG)
         if f0 < 0.0 and f1 < 0.0:
             return Segment(Edge.SBEG, Edge.SFIN)
-        x = - f0 / (f1 - f0)
+        x = -f0 / (f1 - f0)
         return Segment(Edge.SBEG, x) if f0 < 0.0 else Segment(x, Edge.SFIN)
+
+    def is_good_edge(self):
+        return
 
 
 class Facet:
-    """ Грань полиэдра """
+    """Грань полиэдра"""
+
     # Параметры конструктора: список вершин
 
     def __init__(self, vertexes):
@@ -94,9 +103,9 @@ class Facet:
 
     # Нормаль к «горизонтальному» полупространству
     def h_normal(self):
-        n = (
-            self.vertexes[1] - self.vertexes[0]).cross(
-            self.vertexes[2] - self.vertexes[0])
+        n = (self.vertexes[1] - self.vertexes[0]).cross(
+            self.vertexes[2] - self.vertexes[0]
+        )
         return n * (-1.0) if n.dot(Polyedr.V) < 0.0 else n
 
     # Нормали к «вертикальным» полупространствам, причём k-я из них
@@ -108,17 +117,16 @@ class Facet:
     # Вспомогательный метод
     def _vert(self, k):
         n = (self.vertexes[k] - self.vertexes[k - 1]).cross(Polyedr.V)
-        return n * \
-            (-1.0) if n.dot(self.vertexes[k - 1] - self.center()) < 0.0 else n
+        return n * (-1.0) if n.dot(self.vertexes[k - 1] - self.center()) < 0.0 else n
 
     # Центр грани
     def center(self):
-        return sum(self.vertexes, R3(0.0, 0.0, 0.0)) * \
-            (1.0 / len(self.vertexes))
+        return sum(self.vertexes, R3(0.0, 0.0, 0.0)) * (1.0 / len(self.vertexes))
 
 
 class Polyedr:
-    """ Полиэдр """
+    """Полиэдр"""
+
     # вектор проектирования
     V = R3(0.0, 0.0, 1.0)
 
@@ -126,7 +134,7 @@ class Polyedr:
     def __init__(self, file):
 
         # списки вершин, рёбер и граней полиэдра
-        self.vertexes, self.edges, self.facets = [], [], []
+        self.vertexes_raw, self.vertexes, self.edges, self.facets = [], [], [], []
 
         # список строк файла
         with open(file) as f:
@@ -144,8 +152,8 @@ class Polyedr:
                 elif i < nv + 2:
                     # задание всех вершин полиэдра
                     x, y, z = (float(x) for x in line.split())
-                    self.vertexes.append(R3(x, y, z).rz(
-                        alpha).ry(beta).rz(gamma) * c)
+                    self.vertexes_raw.append(R3(x, y, z))
+                    self.vertexes.append(R3(x, y, z).rz(alpha).ry(beta).rz(gamma) * c)
                 else:
                     # вспомогательный массив
                     buf = line.split()
@@ -153,11 +161,42 @@ class Polyedr:
                     size = int(buf.pop(0))
                     # массив вершин этой грани
                     vertexes = list(self.vertexes[int(n) - 1] for n in buf)
+                    vertexes_raw = list(self.vertexes_raw[int(n) - 1] for n in buf)
                     # задание рёбер грани
                     for n in range(size):
                         self.edges.append(Edge(vertexes[n - 1], vertexes[n]))
+                        #self.edges_raw.append(
+                        #    Edge(vertexes_raw[n - 1], vertexes_raw[n])
+                        #)
+
                     # задание самой грани
                     self.facets.append(Facet(vertexes))
+
+    @staticmethod
+    def search(lst, val):
+        for k in range(len(lst)):
+            if lst[k] == val:
+                return k
+        return None
+
+    def good_edges_length(self):
+        seen = []
+        for i in self.edges:
+            a = (i.beg.x, i.beg.y, i.beg.z)
+            b = (i.fin.x, i.fin.y, i.fin.z)
+            if i.beg.is_good() and i.fin.is_good():
+                key = sorted([a, b])
+                if self.search(seen, key) is None:
+                    seen.append(key)
+        distance = 0
+        for k in seen:
+            d = (
+                (k[0][0] - k[1][0]) ** 2
+                + (k[0][1] - k[1][1]) ** 2
+                + (k[0][2] - k[1][2]) ** 2
+            ) ** 0.5
+            distance += d
+        return distance
 
     # Метод изображения полиэдра
     def draw(self, tk):
