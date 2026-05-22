@@ -2,7 +2,7 @@ from math import sin, cos
 
 
 class R3:
-    """ Вектор (точка) в R3 """
+    """Вектор (точка) в R3"""
 
     # Конструктор
     def __init__(self, x, y, z):
@@ -24,12 +24,17 @@ class R3:
     def rz(self, fi):
         return R3(
             cos(fi) * self.x - sin(fi) * self.y,
-            sin(fi) * self.x + cos(fi) * self.y, self.z)
+            sin(fi) * self.x + cos(fi) * self.y,
+            self.z,
+        )
 
     # Поворот вокруг оси Oy
     def ry(self, fi):
-        return R3(cos(fi) * self.x + sin(fi) * self.z,
-                  self.y, -sin(fi) * self.x + cos(fi) * self.z)
+        return R3(
+            cos(fi) * self.x + sin(fi) * self.z,
+            self.y,
+            -sin(fi) * self.x + cos(fi) * self.z,
+        )
 
     # Скалярное произведение
     def dot(self, other):
@@ -40,16 +45,17 @@ class R3:
         return R3(
             self.y * other.z - self.z * other.y,
             self.z * other.x - self.x * other.z,
-            self.x * other.y - self.y * other.x)
+            self.x * other.y - self.y * other.x,
+        )
 
     def is_good(self):
-        return 1 < self.x * self.x + self.y * self.y < 4
+        return 1 < self.x * self.x + self.y * self.y < 16
 
     def distance_on_xoy(self, other):
         return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover start
     x = R3(1.0, 1.0, 1.0)
     print("x", type(x), x.__dict__)
     y = x + R3(1.0, -1.0, 0.0)
@@ -60,3 +66,4 @@ if __name__ == "__main__":
     print("u", type(u), u)
     v = x.cross(y)
     print("v", type(v), v.__dict__)
+# pragma: no cover stop

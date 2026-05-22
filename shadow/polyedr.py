@@ -85,9 +85,6 @@ class Edge:
         x = -f0 / (f1 - f0)
         return Segment(Edge.SBEG, x) if f0 < 0.0 else Segment(x, Edge.SFIN)
 
-    def is_good_edge(self):
-        return
-
 
 class Facet:
     """Грань полиэдра"""
@@ -134,8 +131,13 @@ class Polyedr:
     def __init__(self, file):
 
         # списки вершин, рёбер и граней полиэдра
-        self.vertexes_raw, self.vertexes, self.edges, self.facets = [], [], [], []
-
+        (
+            self.vertexes,
+            self.vertexes_roated,
+            self.edges,
+            self.edges_roated,
+            self.facets,
+        ) = [], [], [], [], []
         # список строк файла
         with open(file) as f:
             for i, line in enumerate(f):
@@ -143,7 +145,7 @@ class Polyedr:
                     # обрабатываем первую строку; buf - вспомогательный массив
                     buf = line.split()
                     # коэффициент гомотетии
-                    c = float(buf.pop(0))
+                    self.c = float(buf.pop(0))
                     # углы Эйлера, определяющие вращение
                     alpha, beta, gamma = (float(x) * pi / 180.0 for x in buf)
                 elif i == 1:
@@ -152,8 +154,12 @@ class Polyedr:
                 elif i < nv + 2:
                     # задание всех вершин полиэдра
                     x, y, z = (float(x) for x in line.split())
-                    self.vertexes_raw.append(R3(x, y, z))
-                    self.vertexes.append(R3(x, y, z).rz(alpha).ry(beta).rz(gamma) * c)
+                    self.vertexes.append(
+                        R3(x, y, z).rz(alpha).ry(beta).rz(gamma) * self.c
+                    )
+                    self.vertexes_roated.append(
+                        R3(x, y, z).rz(alpha).ry(beta).rz(gamma)
+                    )
                 else:
                     # вспомогательный массив
                     buf = line.split()
@@ -161,13 +167,15 @@ class Polyedr:
                     size = int(buf.pop(0))
                     # массив вершин этой грани
                     vertexes = list(self.vertexes[int(n) - 1] for n in buf)
-                    vertexes_raw = list(self.vertexes_raw[int(n) - 1] for n in buf)
+                    vertexes_roated = list(
+                        self.vertexes_roated[int(n) - 1] for n in buf
+                    )
                     # задание рёбер грани
                     for n in range(size):
                         self.edges.append(Edge(vertexes[n - 1], vertexes[n]))
-                        #self.edges_raw.append(
-                        #    Edge(vertexes_raw[n - 1], vertexes_raw[n])
-                        #)
+                        self.edges_roated.append(
+                            Edge(vertexes_roated[n - 1], vertexes_roated[n])
+                        )
 
                     # задание самой грани
                     self.facets.append(Facet(vertexes))
@@ -181,10 +189,10 @@ class Polyedr:
 
     def good_edges_length(self):
         seen = []
-        for i in self.edges:
-            a = (i.beg.x, i.beg.y, i.beg.z)
-            b = (i.fin.x, i.fin.y, i.fin.z)
-            if i.beg.is_good() and i.fin.is_good():
+        for j in self.edges_roated:
+            a = (j.beg.x, j.beg.y, j.beg.z)
+            b = (j.fin.x, j.fin.y, j.fin.z)
+            if j.beg.is_good() and j.fin.is_good():
                 key = sorted([a, b])
                 if self.search(seen, key) is None:
                     seen.append(key)
@@ -199,10 +207,14 @@ class Polyedr:
         return distance
 
     # Метод изображения полиэдра
-    def draw(self, tk):
+    def draw(self, tk):  # pragma: no cover start
         tk.clean()
+        tk.draw_circle(1 * self.c)
+        tk.draw_circle(4 * self.c)
         for e in self.edges:
             for f in self.facets:
                 e.shadow(f)
             for s in e.gaps:
                 tk.draw_line(e.r3(s.beg), e.r3(s.fin))
+
+    # pragma: no cover stop

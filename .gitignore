@@ -1,2 +1,14 @@
-.ipynb_checkpoints
-.pytest_cache
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environments (на всякий случай, чтобы виртуальные окружения не попали в репозиторий)
+.venv/
+env/
+venv/
