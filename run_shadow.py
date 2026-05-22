@@ -4,7 +4,6 @@ from time import time
 from common.tk_drawer import TkDrawer
 from shadow.polyedr import Polyedr
 
-
 tk = TkDrawer()
 try:
     for name in ["ccc", "cube", "box", "king", "test", "cow"]:

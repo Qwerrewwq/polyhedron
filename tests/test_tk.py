@@ -47,3 +47,30 @@ class TestTkDrawer:
             assert False, f"draw_line() raised exception: {e}"
         finally:
             tk.root.destroy()
+
+    def test_draw_circle(self):
+        tk = TkDrawer()
+        try:
+            # Сохраняем количество элементов до вызова
+            initial_items = tk.canvas.find_all()
+            # Рисуем окружность радиуса 2.0 (в условных единицах)
+            tk.draw_circle(2.0)
+            new_items = tk.canvas.find_all()
+            # Должен добавиться ровно один объект
+            assert len(new_items) == len(initial_items) + 1
+
+            # Проверяем координаты
+            coords = tk.canvas.coords(new_items[-1])
+            cx, cy = SIZE / 2, SIZE / 2
+            r = SCALE * 2.0
+            expected = (cx - r, cy - r, cx + r, cy + r)
+            assert coords == approx(expected)
+
+            # Проверяем, что это овал
+            assert tk.canvas.type(new_items[-1]) == "oval"
+
+            # Проверяем цвет контура
+            outline = tk.canvas.itemcget(new_items[-1], "outline")
+            assert outline == "pink"
+        finally:
+            tk.root.destroy()

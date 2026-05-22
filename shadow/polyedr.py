@@ -62,7 +62,9 @@ class Edge:
                 return
 
         shade.intersect(
-            self.intersect_edge_with_normal(facet.vertexes[0], facet.h_normal())
+            self.intersect_edge_with_normal(
+                facet.vertexes[0], facet.h_normal()
+            )
         )
         if shade.is_degenerate():
             return
@@ -114,11 +116,17 @@ class Facet:
     # Вспомогательный метод
     def _vert(self, k):
         n = (self.vertexes[k] - self.vertexes[k - 1]).cross(Polyedr.V)
-        return n * (-1.0) if n.dot(self.vertexes[k - 1] - self.center()) < 0.0 else n
+        return (
+            n * (-1.0)
+            if n.dot(self.vertexes[k - 1] - self.center()) < 0.0
+            else n
+        )
 
     # Центр грани
     def center(self):
-        return sum(self.vertexes, R3(0.0, 0.0, 0.0)) * (1.0 / len(self.vertexes))
+        return sum(self.vertexes, R3(0.0, 0.0, 0.0)) * (
+            1.0 / len(self.vertexes)
+        )
 
 
 class Polyedr:
@@ -137,7 +145,13 @@ class Polyedr:
             self.edges,
             self.edges_roated,
             self.facets,
-        ) = [], [], [], [], []
+        ) = (
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
         # список строк файла
         with open(file) as f:
             for i, line in enumerate(f):

@@ -3,26 +3,30 @@ from common.r3 import R3
 from shadow.polyedr import Segment, Edge, Facet, Polyedr
 
 
-# ----- вспомогательные аппроксимации -----
 def r3approx(self, other):
-    return self.x == approx(other.x) and self.y == approx(other.y) \
+    return (
+        self.x == approx(other.x)
+        and self.y == approx(other.y)
         and self.z == approx(other.z)
+    )
 
 
-setattr(R3, 'approx', r3approx)
+setattr(R3, "approx", r3approx)
 
 
 def seg_approx(self, other):
-    return self.beg == approx(other.beg) and self.fin == approx(other.fin) or \
-        self.beg == approx(other.fin) and self.fin == approx(other.beg)
+    return (
+        self.beg == approx(other.beg)
+        and self.fin == approx(other.fin)
+        or self.beg == approx(other.fin)
+        and self.fin == approx(other.beg)
+    )
 
 
-setattr(Segment, 'approx', seg_approx)
+setattr(Segment, "approx", seg_approx)
 
 
 class TestEdge:
-
-    # ---------- r3 ----------
     def test_r301(self):
         s = Edge(R3(0.0, 0.0, -1.0), R3(1.0, 0.0, -1.0))
         assert s.beg.approx(s.r3(0.0))
@@ -35,7 +39,6 @@ class TestEdge:
         s = Edge(R3(0.0, 0.0, -1.0), R3(1.0, 0.0, -1.0))
         assert R3(0.5, 0.0, -1.0).approx(s.r3(0.5))
 
-    # ---------- intersect_edge_with_normal ----------
     def test_intersect_01(self):
         """Ребро полностью внутри полупространства"""
         s = Edge(R3(0.0, 0.0, -1.0), R3(1.0, 0.0, -1.0))
@@ -73,11 +76,10 @@ class TestEdge:
 
     def test_intersect_06(self):
         """Начало на плоскости, конец внутри — весь отрезок считается внутри?
-           (в алгоритме граница не включается, поэтому пересечение от 0 до 1)"""
+        (в алгоритме граница не включается, поэтому пересечение от 0 до 1)"""
         s = Edge(R3(0.0, 0.0, 0.0), R3(1.0, 0.0, -1.0))
         a = R3(0.0, 0.0, 0.0)
         n = R3(0.0, 0.0, 1.0)
-        # f0 = 0, f1 = -1 -> x = -0/(-1) = 0, f0 не < 0 => ветка else: Segment(x, SFIN)=Segment(0,1)
         assert s.intersect_edge_with_normal(a, n).approx(Segment(0.0, 1.0))
 
     def test_intersect_07(self):
@@ -85,41 +87,61 @@ class TestEdge:
         s = Edge(R3(0.0, 0.0, -1.0), R3(1.0, 0.0, 0.0))
         a = R3(1.0, 1.0, 0.0)
         n = R3(0.0, 0.0, 1.0)
-        # f0 = n·(beg-a) = (0,0,1)·(-1,-1,-1) = -1, f1 = (0,0,1)·(0,-1,0) = 0
-        # x = -(-1)/(0 - (-1)) = 1/1 = 1.0, f0 < 0 => Segment(0, 1.0) – весь отрезок
-        # (конец на границе не считается внутри, поэтому пересечение весь)
         assert s.intersect_edge_with_normal(a, n).approx(Segment(0.0, 1.0))
 
-    # ---------- shadow ----------
     def test_shadow_01(self):
         """Грань не затеняет ребро, лежащее в её плоскости"""
         s = Edge(R3(0.0, 0.0, 0.0), R3(1.0, 1.0, 0.0))
-        f = Facet([R3(0.0, 0.0, 0.0), R3(2.0, 0.0, 0.0),
-                   R3(2.0, 2.0, 0.0), R3(0.0, 2.0, 0.0)])
+        f = Facet(
+            [
+                R3(0.0, 0.0, 0.0),
+                R3(2.0, 0.0, 0.0),
+                R3(2.0, 2.0, 0.0),
+                R3(0.0, 2.0, 0.0),
+            ]
+        )
         s.shadow(f)
         assert s.gaps[0].approx(Segment(0.0, 1.0))
 
     def test_shadow_02(self):
         """Грань не затеняет ребро, расположенное выше грани"""
         s = Edge(R3(0.0, 0.0, 1.0), R3(1.0, 1.0, 1.0))
-        f = Facet([R3(0.0, 0.0, 0.0), R3(2.0, 0.0, 0.0),
-                   R3(2.0, 2.0, 0.0), R3(0.0, 2.0, 0.0)])
+        f = Facet(
+            [
+                R3(0.0, 0.0, 0.0),
+                R3(2.0, 0.0, 0.0),
+                R3(2.0, 2.0, 0.0),
+                R3(0.0, 2.0, 0.0),
+            ]
+        )
         s.shadow(f)
         assert s.gaps[0].approx(Segment(0.0, 1.0))
 
     def test_shadow_03(self):
         """Грань полностью затеняет ребро под ней"""
         s = Edge(R3(0.0, 0.0, -1.0), R3(1.0, 1.0, -1.0))
-        f = Facet([R3(0.0, 0.0, 0.0), R3(2.0, 0.0, 0.0),
-                   R3(2.0, 2.0, 0.0), R3(0.0, 2.0, 0.0)])
+        f = Facet(
+            [
+                R3(0.0, 0.0, 0.0),
+                R3(2.0, 0.0, 0.0),
+                R3(2.0, 2.0, 0.0),
+                R3(0.0, 2.0, 0.0),
+            ]
+        )
         s.shadow(f)
         assert len(s.gaps) == 0
 
     def test_shadow_04(self):
         """Длинное ребро под гранью даёт ровно два просвета"""
         s = Edge(R3(-5.0, -5.0, -1.0), R3(3.0, 3.0, -1.0))
-        f = Facet([R3(0.0, 0.0, 0.0), R3(2.0, 0.0, 0.0),
-                   R3(2.0, 2.0, 0.0), R3(0.0, 2.0, 0.0)])
+        f = Facet(
+            [
+                R3(0.0, 0.0, 0.0),
+                R3(2.0, 0.0, 0.0),
+                R3(2.0, 2.0, 0.0),
+                R3(0.0, 2.0, 0.0),
+            ]
+        )
         s.shadow(f)
         assert len(s.gaps) == 2
 
@@ -127,20 +149,29 @@ class TestEdge:
         """Вертикальная грань не затеняет ничего"""
         s = Edge(R3(0.0, 0.0, -1.0), R3(1.0, 1.0, -1.0))
         # Вертикальная грань в плоскости x=0
-        f = Facet([R3(0.0, 0.0, 0.0), R3(0.0, 2.0, 0.0),
-                   R3(0.0, 2.0, 2.0), R3(0.0, 0.0, 2.0)])
+        f = Facet(
+            [
+                R3(0.0, 0.0, 0.0),
+                R3(0.0, 2.0, 0.0),
+                R3(0.0, 2.0, 2.0),
+                R3(0.0, 0.0, 2.0),
+            ]
+        )
         s.shadow(f)
-        # Тень не изменилась, просвет один
         assert len(s.gaps) == 1
         assert s.gaps[0].approx(Segment(0.0, 1.0))
 
     def test_shadow_vertical_outside(self):
         """Ребро вне призмы вертикальных полупространств — тень пуста"""
         s = Edge(R3(3.0, 3.0, -1.0), R3(4.0, 4.0, -1.0))
-        # Грань в z=0, квадрат [0,2]x[0,2]
-        f = Facet([R3(0.0, 0.0, 0.0), R3(2.0, 0.0, 0.0),
-                   R3(2.0, 2.0, 0.0), R3(0.0, 2.0, 0.0)])
+        f = Facet(
+            [
+                R3(0.0, 0.0, 0.0),
+                R3(2.0, 0.0, 0.0),
+                R3(2.0, 2.0, 0.0),
+                R3(0.0, 2.0, 0.0),
+            ]
+        )
         s.shadow(f)
-        # Ребро полностью вне призмы, просвет должен остаться один
         assert len(s.gaps) == 1
         assert s.gaps[0].approx(Segment(0.0, 1.0))

@@ -35,7 +35,13 @@ class Polyedr:
             self.edges,
             self.edges_roated,
             self.facets,
-        ) = [], [], [], [], []
+        ) = (
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
 
         # список строк файла
         with open(file) as f:

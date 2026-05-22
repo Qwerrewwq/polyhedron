@@ -3,16 +3,18 @@ from common.r3 import R3
 
 
 def r3approx(self, other):
-    return self.x == approx(other.x) and self.y == approx(other.y) \
+    return (
+        self.x == approx(other.x)
+        and self.y == approx(other.y)
         and self.z == approx(other.z)
+    )
 
 
 # добавляем метод approx в класс R3 для удобства сравнения в тестах
-setattr(R3, 'approx', r3approx)
+setattr(R3, "approx", r3approx)
 
 
 class TestR3:
-
     # Конструктор и атрибуты
     def test_init(self):
         p = R3(1.0, 2.0, 3.0)
@@ -108,39 +110,32 @@ class TestR3:
         assert c1.y == -c2.y
         assert c1.z == -c2.z
 
-    # Метод is_good: точка внутри кольца (1 < x²+y² < 16)
     def test_is_good_inside(self):
         p = R3(2.0, 2.0, 100.0)  # x²+y²=8, z не важно
         assert p.is_good() is True
 
-    # Метод is_good: точка на внутренней границе (x²+y²=1) – не good
     def test_is_good_inner_boundary(self):
         p = R3(1.0, 0.0, 0.0)  # 1
         assert p.is_good() is False
 
-    # Метод is_good: точка на внешней границе (x²+y²=16) – не good
     def test_is_good_outer_boundary(self):
         p = R3(4.0, 0.0, 0.0)  # 16
         assert p.is_good() is False
 
-    # Метод is_good: точка вне кольца (x²+y²=0.5)
     def test_is_good_outside_inner(self):
         p = R3(0.5, 0.5, 0.0)  # 0.5
         assert p.is_good() is False
 
-    # Метод is_good: точка вне кольца (x²+y²=17)
     def test_is_good_outside_outer(self):
         p = R3(4.0, 1.0, 0.0)  # 17
         assert p.is_good() is False
 
-    # Метод distance_on_xoy: расстояние между проекциями
     def test_distance_on_xoy(self):
         a = R3(0.0, 0.0, 10.0)
         b = R3(3.0, 4.0, -10.0)
         d = a.distance_on_xoy(b)
         assert d == 5.0
 
-    # Метод distance_on_xoy: одинаковые точки
     def test_distance_on_xoy_zero(self):
         a = R3(1.0, 2.0, 3.0)
         b = R3(1.0, 2.0, 5.0)
