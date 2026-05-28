@@ -15,7 +15,8 @@ try:
         delta_time = time() - start_time
         print(f"Изображение полиэдра '{name}' заняло {delta_time} сек.")
         print(
-            f'Сумма длин всех ребер соединяющих "хорошие" точки равна {polyedr.good_edges_length()}'
+            f'Сумма длин всех ребер соединяющих "хорошие" точки равна '
+            f"{polyedr.good_edges_length()}"
         )
         input("Hit 'Return' to continue -> ")
 except (EOFError, KeyboardInterrupt):

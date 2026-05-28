@@ -1,19 +1,17 @@
 import pytest
 from pytest import approx
-from math import pi
-from shadow.polyedr import Polyedr, Edge, Facet, Segment
-from common.r3 import R3
+
+from shadow.polyedr import Polyedr
 
 
-# Вспомогательная функция для создания временного .geom файла
 def write_geom_file(path, lines):
+    """Вспомогательная функция для создания временного .geom файла."""
     with open(path, "w") as f:
         f.write("\n".join(lines))
 
 
 class TestPolyedr:
     def test_init_cube(self, tmp_path):
-        """Проверка загрузки куба: количество вершин, рёбер, граней, координаты"""
         geom = [
             "1.0 0.0 0.0 0.0",
             "8 6 24",
@@ -42,14 +40,28 @@ class TestPolyedr:
         assert len(poly.edges_roated) == 24
         v0 = poly.vertexes[0]
         v0r = poly.vertexes_roated[0]
-        assert v0.x == approx(-0.5) and v0.y == approx(-0.5) and v0.z == approx(0.5)
-        assert v0r.x == approx(-0.5) and v0r.y == approx(-0.5) and v0r.z == approx(0.5)
+        assert (
+            v0.x == approx(-0.5)
+            and v0.y == approx(-0.5)
+            and v0.z == approx(0.5)
+        )
+        assert (
+            v0r.x == approx(-0.5)
+            and v0r.y == approx(-0.5)
+            and v0r.z == approx(0.5)
+        )
         first_edge = poly.edges[0]  # 4-1
-        assert first_edge.beg.x == approx(0.5) and first_edge.beg.y == approx(-0.5)
-        assert first_edge.fin.x == approx(-0.5) and first_edge.fin.y == approx(-0.5)
+        assert (
+            first_edge.beg.x == approx(0.5)
+            and first_edge.beg.y == approx(-0.5)
+        )
+        assert (
+            first_edge.fin.x == approx(-0.5)
+            and first_edge.fin.y == approx(-0.5)
+        )
 
     def test_init_with_rotation_and_scale(self, tmp_path):
-        """Проверка, что гомотетия и поворот применяются"""
+        """Проверка, что гомотетия и поворот применяются."""
         geom = [
             "2.0 0.0 0.0 90.0",
             "4 1 4",
@@ -63,12 +75,21 @@ class TestPolyedr:
         write_geom_file(filepath, geom)
         poly = Polyedr(str(filepath))
         v0 = poly.vertexes[0]
-        assert v0.x == approx(0.0) and v0.y == approx(2.0) and v0.z == approx(0.0)
+        assert (
+            v0.x == approx(0.0)
+            and v0.y == approx(2.0)
+            and v0.z == approx(0.0)
+        )
+
         v0r = poly.vertexes_roated[0]
-        assert v0r.x == approx(0.0) and v0r.y == approx(1.0) and v0r.z == approx(0.0)
+        assert (
+            v0r.x == approx(0.0)
+            and v0r.y == approx(1.0)
+            and v0r.z == approx(0.0)
+        )
 
     def test_good_edges_length_no_good_edges(self, tmp_path):
-        """Все вершины внутри внутренней окружности — сумма 0"""
+        """Все вершины внутри внутренней окружности — сумма 0."""
         geom = [
             "1.0 0.0 0.0 0.0",
             "4 1 4",
@@ -84,7 +105,7 @@ class TestPolyedr:
         assert poly.good_edges_length() == approx(0.0)
 
     def test_good_edges_length_single_good_edge(self, tmp_path):
-        """Одно ребро с двумя хорошими концами — сумма равна длине"""
+        """Одно ребро с двумя хорошими концами — сумма равна длине."""
         geom = [
             "1.0 0.0 0.0 0.0",
             "2 1 2",
@@ -99,7 +120,7 @@ class TestPolyedr:
         assert length == approx(1.0)
 
     def test_good_edges_length_with_duplicate_edges(self, tmp_path):
-        """Два треугольника с общим ребром — длина учтена один раз"""
+        """Два треугольника с общим ребром — длина учтена один раз."""
         geom = [
             "1.0 0.0 0.0 0.0",
             "3 2 6",
@@ -117,7 +138,6 @@ class TestPolyedr:
         assert total == approx(expected)
 
     def test_good_edges_length_boundary(self, tmp_path):
-        """Точки на границах кольца не считаются хорошими (строгое неравенство)"""
         geom = [
             "1.0 0.0 0.0 0.0",
             "3 1 3",
@@ -132,7 +152,7 @@ class TestPolyedr:
         assert poly.good_edges_length() == 0.0
 
     def test_good_edges_length_mixed(self, tmp_path):
-        """Ребро с одним хорошим концом не учитывается"""
+        """Ребро с одним хорошим концом не учитывается."""
         geom = [
             "1.0 0.0 0.0 0.0",
             "2 1 2",

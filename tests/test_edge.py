@@ -83,7 +83,6 @@ class TestEdge:
         assert s.intersect_edge_with_normal(a, n).approx(Segment(0.0, 1.0))
 
     def test_intersect_07(self):
-        """Конец на плоскости, начало внутри — отрезок от 0 до точки пересечения (0.5)?"""
         s = Edge(R3(0.0, 0.0, -1.0), R3(1.0, 0.0, 0.0))
         a = R3(1.0, 1.0, 0.0)
         n = R3(0.0, 0.0, 1.0)
